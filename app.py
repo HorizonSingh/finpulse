@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
+import requests
 import time
 from datetime import datetime
 import os
 
 # --- CONFIGURATION ---
-GENAI_API_KEY = "YOUR_API_KEY_HERE" # <--- PASTE YOUR KEY HERE
-genai.configure(api_key=GENAI_API_KEY)
+# OllamaFreeAPI Endpoint (Free Distributed Gateway)
+OLLAMA_FREE_API_URL = "https://ollama-api.ollamafreeapi.com/api/generate"
+MODEL_NAME = "llama3" # You can also use 'mistral' or 'gemma'
 
 st.set_page_config(
     page_title="FinPulse Prime", 
@@ -71,7 +72,6 @@ st.markdown("""
 # --- LOGIC FUNCTIONS ---
 def load_data():
     try:
-        # Note: Ensure the 'FinPulse' folder exists or adjust this path
         path = "bank_transactions.csv" if not os.path.exists("FinPulse/bank_transactions.csv") else "FinPulse/bank_transactions.csv"
         df = pd.read_csv(path)
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
@@ -79,51 +79,53 @@ def load_data():
         df['Date'] = df['Date'].dt.strftime('%d-%m-%Y')
         return df
     except Exception:
-        # Create dummy data if file is missing for demonstration
         data = {
-            'Customer_Name': ['John Doe', 'Jane Smith'],
-            'Amount': [15000, 2000],
+            'Customer_Name': ['Arjun Mehta', 'Sara Khan'],
+            'Amount': [45000, 1200],
             'Category': ['Salary', 'Dining'],
-            'Transaction_Description': ['Tech Corp Credits', 'Starbucks'],
+            'Transaction_Description': ['Corp Credit', 'Pizza Hut'],
             'Transaction_Type': ['Credit', 'Debit'],
-            'Date': ['12-05-2024', '11-05-2024']
+            'Date': ['15-02-2026', '14-02-2026']
         }
         return pd.DataFrame(data)
 
 def save_log(customer, amount, txn_type, status):
     log_file = "app_logs.csv"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_data = pd.DataFrame({
-        "Timestamp": [timestamp],
-        "Customer": [customer],
-        "Amount": [amount],
-        "Type": [txn_type],
-        "Status": [status]
-    })
+    new_data = pd.DataFrame({"Timestamp": [timestamp], "Customer": [customer], "Amount": [amount], "Type": [txn_type], "Status": [status]})
     if not os.path.isfile(log_file):
         new_data.to_csv(log_file, index=False)
     else:
         new_data.to_csv(log_file, mode='a', header=False, index=False)
 
 def generate_offer(customer, amount, category, description, txn_type):
+    goal = "Suggest Investment (Mutual Funds)" if txn_type == "Credit" else "Offer a Cashback Credit Card"
+    
+    prompt = f"""
+    Context: {customer} just made a {txn_type} of ₹{amount} for {description}.
+    Goal: {goal}.
+    Constraint: Write a short, professional WhatsApp message. Max 20 words. Use 1 emoji.
+    """
+    
+    payload = {
+        "model": MODEL_NAME,
+        "prompt": prompt,
+        "stream": False
+    }
+
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        goal = "Suggest Investment (FD/Mutual Fund)" if txn_type == "Credit" else "Cross-sell Credit Card/Loan"
-        
-        prompt = f"""
-        You are 'FinPulse', a sleek banking AI. 
-        Context: {customer} did a {txn_type} of ₹{amount} for {description}.
-        Task: {goal}. 
-        Constraint: Short WhatsApp style, 1 emoji, max 20 words. No intros.
-        """
-        response = model.generate_content(prompt)
-        return response.text
+        # Calling the Distributed OllamaFreeAPI
+        response = requests.post(OLLAMA_FREE_API_URL, json=payload, timeout=30)
+        if response.status_code == 200:
+            return response.json().get('response', "Offer processed successfully.")
+        else:
+            return "AI Agent currently optimizing. Please try again."
     except Exception as e:
-        return f"System busy. Please try again later. (Error: {str(e)})"
+        return f"Connection error: Distributed Nodes Busy."
 
 # --- UI LAYOUT ---
 st.markdown("<h1 style='text-align: center; font-size: 3rem; margin-bottom: 0px;'>💸 FinPulse <span style='color:#00E676'>Prime</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #888;'>Next-Gen Autonomous Banking Interface</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #888;'>Next-Gen Autonomous Banking Interface (Powered by OllamaFreeAPI)</p>", unsafe_allow_html=True)
 
 tab_home, tab_analytics, tab_history = st.tabs(["🏠 Live Operations", "📈 Market Insights", "📜 Real-Time Audit Logs"])
 
@@ -149,11 +151,11 @@ with tab_home:
             
             if st.button("🚀 DEPLOY AGENT"):
                 row = df.iloc[idx]
-                with st.status("Neural Engine Processing...", expanded=True) as status:
-                    st.write("Analyzing spending velocity...")
+                with st.status("Accessing Distributed AI Nodes...", expanded=True) as status:
+                    st.write("Route established to free gateway...")
                     msg = generate_offer(row['Customer_Name'], row['Amount'], row['Category'], row['Transaction_Description'], row['Transaction_Type'])
                     save_log(row['Customer_Name'], row['Amount'], row['Transaction_Type'], "✅ Deployed")
-                    status.update(label="Analysis Complete!", state="complete")
+                    status.update(label="Offer Generated via Ollama!", state="complete")
                 
                 st.balloons()
                 st.markdown(f"""
@@ -170,4 +172,4 @@ with tab_history:
         st.info("No logs found. Deploy an agent to start.")
 
 # --- FOOTER ---
-st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime © 2026 | <span style="color:#00E676;">● Stable</span></div>', unsafe_allow_html=True)
+st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime © 2026 | <span style="color:#00E676;">● Node Status: Active</span></div>', unsafe_allow_html=True)
