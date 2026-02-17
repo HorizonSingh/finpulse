@@ -14,14 +14,14 @@ def generate_offer(customer, amount, category, description, txn_type):
     try:
         goal = "Suggest Investment" if txn_type == "Credit" else "Cross-sell Loan"
         
-        # New call style for the 2.0/GenAI SDK
+        # New call style for 2026 SDK
         response = client.models.generate_content(
-            model='gemini-2.0-flash', # Updated to latest model
+            model='gemini-2.0-flash',  # Use the latest fast model
             contents=f"Context: {customer} spent ₹{amount} on {description}. Task: {goal}."
         )
         return response.text
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"System busy. (Error: {str(e)})"
         
 st.set_page_config(
     page_title="FinPulse Prime", 
@@ -175,4 +175,5 @@ with tab_history:
         st.info("No logs found yet.")
 
 st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime © 2026 | API Key Verified</div>', unsafe_allow_html=True)
+
 
