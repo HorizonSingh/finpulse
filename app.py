@@ -7,7 +7,7 @@ from datetime import datetime
 
 # --- CONFIGURATION ---
 # Using the key you provided
-API_KEY = "AIzaSyCJhCUQg6y-VrYoukgaw6K5luHoLV93TxU"
+API_KEY = "AIzaSyD547fs3nuTNbj44SkM4Jyprk-DXylOxzQ"
 client = genai.Client(api_key=API_KEY)
 
 st.set_page_config(
@@ -158,4 +158,5 @@ with tab_logs:
         st.info("No activity logs yet.")
 
 st.markdown('<div style="text-align:center; color:#888; padding:20px;">🔒 FinPulse Prime © 2026 | Powered by Unified GenAI SDK</div>', unsafe_allow_html=True)
+
 
