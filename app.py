@@ -1,19 +1,13 @@
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
-import time
+from google import genai
 from datetime import datetime
 import os
 
 # --- CONFIGURATION ---
-# Get your key at https://openrouter.ai/keys
-OPENROUTER_API_KEY = "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"
-
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
-
+# Get your FREE key at: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY = "AIzaSyCJhCUQg6y-VrYoukgaw6K5luHoLV93TxU"
+client = genai.Client(api_key=GEMINI_API_KEY)
 st.set_page_config(
     page_title="FinPulse Prime", 
     page_icon="💸", 
@@ -81,3 +75,4 @@ if st.button("🚀 RUN AI AGENT"):
         row = df.iloc[0]
         offer = generate_offer(row['Customer'], row['Amount'], row['Desc'], row['Type'])
         st.success(f"**Offer for {row['Customer']}:** {offer}")
+
