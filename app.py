@@ -7,7 +7,7 @@ import os
 
 # --- CONFIGURATION ---
 # It is best practice to use st.secrets["OPENAI_API_KEY"] for deployment
-OPENAI_API_KEY = "sk-proj-YOUR_ACTUAL_KEY_HERE" 
+OPENAI_API_KEY = "sk-ZD8gB0MTEd2wpDdaQHVbO8HNArUI71W6nrxd0rstkWCaDLnp" 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 st.set_page_config(
@@ -163,4 +163,5 @@ with tab_history:
         st.info("Log database empty. Run an agent deployment first.")
 
 st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime | Powered by OpenAI GPT-4o</div>', unsafe_allow_html=True)
+
 
