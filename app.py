@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
-import requests
+from openai import OpenAI
 import time
 from datetime import datetime
 import os
 
 # --- CONFIGURATION ---
-# OllamaFreeAPI Endpoint (Free Distributed Gateway)
-OLLAMA_FREE_API_URL = "https://ollama-api.ollamafreeapi.com/api/generate"
-MODEL_NAME = "llama3" # You can also use 'mistral' or 'gemma'
+# It is best practice to use st.secrets["OPENAI_API_KEY"] for deployment
+OPENAI_API_KEY = "sk-proj-YOUR_ACTUAL_KEY_HERE" 
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 st.set_page_config(
     page_title="FinPulse Prime", 
@@ -79,13 +79,14 @@ def load_data():
         df['Date'] = df['Date'].dt.strftime('%d-%m-%Y')
         return df
     except Exception:
+        # Fallback dummy data
         data = {
-            'Customer_Name': ['Arjun Mehta', 'Sara Khan'],
-            'Amount': [45000, 1200],
-            'Category': ['Salary', 'Dining'],
-            'Transaction_Description': ['Corp Credit', 'Pizza Hut'],
+            'Customer_Name': ['Aman Sharma', 'Priya Iyer'],
+            'Amount': [60000, 4500],
+            'Category': ['Salary', 'Shopping'],
+            'Transaction_Description': ['Monthly Pay', 'Amazon India'],
             'Transaction_Type': ['Credit', 'Debit'],
-            'Date': ['15-02-2026', '14-02-2026']
+            'Date': ['17-02-2026', '16-02-2026']
         }
         return pd.DataFrame(data)
 
@@ -99,33 +100,24 @@ def save_log(customer, amount, txn_type, status):
         new_data.to_csv(log_file, mode='a', header=False, index=False)
 
 def generate_offer(customer, amount, category, description, txn_type):
-    goal = "Suggest Investment (Mutual Funds)" if txn_type == "Credit" else "Offer a Cashback Credit Card"
+    goal = "Invest in High-Yield FD" if txn_type == "Credit" else "Upgrade to Platinum Credit Card"
     
-    prompt = f"""
-    Context: {customer} just made a {txn_type} of ₹{amount} for {description}.
-    Goal: {goal}.
-    Constraint: Write a short, professional WhatsApp message. Max 20 words. Use 1 emoji.
-    """
-    
-    payload = {
-        "model": MODEL_NAME,
-        "prompt": prompt,
-        "stream": False
-    }
-
     try:
-        # Calling the Distributed OllamaFreeAPI
-        response = requests.post(OLLAMA_FREE_API_URL, json=payload, timeout=30)
-        if response.status_code == 200:
-            return response.json().get('response', "Offer processed successfully.")
-        else:
-            return "AI Agent currently optimizing. Please try again."
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", # Cost-effective and fast
+            messages=[
+                {"role": "system", "content": "You are FinPulse, a premium AI banking assistant. Write short, punchy WhatsApp-style offers."},
+                {"role": "user", "content": f"Customer {customer} made a {txn_type} of ₹{amount} for {description}. {goal}. Keep it under 20 words with 1 emoji."}
+            ],
+            max_tokens=50
+        )
+        return response.choices[0].message.content
     except Exception as e:
-        return f"Connection error: Distributed Nodes Busy."
+        return f"AI Logic Offline: {str(e)}"
 
 # --- UI LAYOUT ---
 st.markdown("<h1 style='text-align: center; font-size: 3rem; margin-bottom: 0px;'>💸 FinPulse <span style='color:#00E676'>Prime</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #888;'>Next-Gen Autonomous Banking Interface (Powered by OllamaFreeAPI)</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #888;'>Autonomous Banking powered by OpenAI</p>", unsafe_allow_html=True)
 
 tab_home, tab_analytics, tab_history = st.tabs(["🏠 Live Operations", "📈 Market Insights", "📜 Real-Time Audit Logs"])
 
@@ -147,15 +139,14 @@ with tab_home:
         
         with col_action:
             st.markdown('<div style="background-color:rgba(255,255,255,0.05);padding:15px;border-radius:15px;"><h3>⚡ Command Center</h3></div>', unsafe_allow_html=True)
-            idx = st.number_input("Transaction ID:", min_value=0, max_value=len(df)-1, step=1)
+            idx = st.number_input("Select Row Index:", min_value=0, max_value=len(df)-1, step=1)
             
             if st.button("🚀 DEPLOY AGENT"):
                 row = df.iloc[idx]
-                with st.status("Accessing Distributed AI Nodes...", expanded=True) as status:
-                    st.write("Route established to free gateway...")
+                with st.status("GPT-4o Analyzing Patterns...", expanded=True) as status:
                     msg = generate_offer(row['Customer_Name'], row['Amount'], row['Category'], row['Transaction_Description'], row['Transaction_Type'])
                     save_log(row['Customer_Name'], row['Amount'], row['Transaction_Type'], "✅ Deployed")
-                    status.update(label="Offer Generated via Ollama!", state="complete")
+                    status.update(label="Campaign Strategy Generated!", state="complete")
                 
                 st.balloons()
                 st.markdown(f"""
@@ -169,7 +160,7 @@ with tab_history:
     if os.path.exists("app_logs.csv"):
         st.dataframe(pd.read_csv("app_logs.csv").iloc[::-1], use_container_width=True)
     else:
-        st.info("No logs found. Deploy an agent to start.")
+        st.info("Log database empty. Run an agent deployment first.")
 
-# --- FOOTER ---
-st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime © 2026 | <span style="color:#00E676;">● Node Status: Active</span></div>', unsafe_allow_html=True)
+st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime | Powered by OpenAI GPT-4o</div>', unsafe_allow_html=True)
+
