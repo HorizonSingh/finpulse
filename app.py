@@ -1,15 +1,28 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
-import time
+from google import genai  # Use the new import path
 from datetime import datetime
 import os
 
-# --- CONFIGURATION ---
-# Your provided API Key
-GENAI_API_KEY = "AIzaSyCJhCUQg6y-VrYoukgaw6K5luHoLV93TxU" 
-genai.configure(api_key=GENAI_API_KEY)
+# --- NEW CONFIGURATION ---
+# The new SDK does not use genai.configure()
+GEMINI_API_KEY = "AIzaSyCJhCUQg6y-VrYoukgaw6K5luHoLV93TxU"
+client = genai.Client(api_key=GEMINI_API_KEY) # Key is passed here
 
+# --- REST OF YOUR APP ---
+def generate_offer(customer, amount, category, description, txn_type):
+    try:
+        goal = "Suggest Investment" if txn_type == "Credit" else "Cross-sell Loan"
+        
+        # New call style for the 2.0/GenAI SDK
+        response = client.models.generate_content(
+            model='gemini-2.0-flash', # Updated to latest model
+            contents=f"Context: {customer} spent ₹{amount} on {description}. Task: {goal}."
+        )
+        return response.text
+    except Exception as e:
+        return f"Error: {str(e)}"
+        
 st.set_page_config(
     page_title="FinPulse Prime", 
     page_icon="💸", 
@@ -162,3 +175,4 @@ with tab_history:
         st.info("No logs found yet.")
 
 st.markdown('<div style="position:fixed;bottom:0;left:0;width:100%;background:#000;color:#888;text-align:center;padding:10px;border-top:1px solid #333;">🔒 FinPulse Prime © 2026 | API Key Verified</div>', unsafe_allow_html=True)
+
