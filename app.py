@@ -158,3 +158,4 @@ with tab_logs:
         st.info("No activity logs yet.")
 
 st.markdown('<div style="text-align:center; color:#888; padding:20px;">🔒 FinPulse Prime © 2026 | Powered by Unified GenAI SDK</div>', unsafe_allow_html=True)
+
