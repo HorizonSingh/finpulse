@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
-import time
+from google import genai
 from datetime import datetime
 import os
 
@@ -241,4 +240,5 @@ st.markdown("""
         </p>
     </div>
     """, unsafe_allow_html=True)
+
 
